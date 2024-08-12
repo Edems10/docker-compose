@@ -23,7 +23,7 @@ services:
       - PGID=1000
     volumes:
       - /docker_config/qbittorrent:/config
-      - /pool0/Heh/Series:/downloads #optional
+      - /pool0/Heh/Torrents:/downloads #optional
     depends_on:
       - vpn
 
@@ -55,7 +55,7 @@ services:
     volumes:
       - /docker_config/radarr:/config
       - /pool0/Heh/Movies:/movies
-      - /pool0/Heh/Torrents_mov:/downloads #optional
+      - /pool0/Heh/Torrents:/downloads #optional
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -70,7 +70,7 @@ services:
     volumes:
       - /docker_config/sonarr:/config
       - /pool0/Heh/Series:/tv
-      - /pool0/Heh/Torrents_ser:/downloads #optional
+      - /pool0/Heh/Torrents:/downloads #optional
     ports:
       - 8989:8989
     restart: unless-stopped

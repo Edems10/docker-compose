@@ -21,7 +21,7 @@ This repository contains a Docker Compose setup for a complete media server envi
   - `PGID=1000`
 - **Volumes**:
   - `/docker_config/qbittorrent:/config`: Configuration files.
-  - `/pool0/Heh/Series:/downloads`: Download location for torrents.
+  - `/pool0/Heh/Torrents:/downloads`: Download location for torrents.
 
 ### 3. Plex
 - **Image**: lscr.io/linuxserver/plex:latest
@@ -48,7 +48,7 @@ This repository contains a Docker Compose setup for a complete media server envi
 - **Volumes**:
   - `/docker_config/radarr:/config`: Configuration files.
   - `/pool0/Heh/Movies:/movies`: Movies library.
-  - `/pool0/Heh/Torrents_mov:/downloads`: Download location for movie torrents.
+  - `/pool0/Heh/Torrents:/downloads`: Download location for movie torrents.
 
 ### 5. Sonarr
 - **Image**: lscr.io/linuxserver/sonarr:latest
@@ -60,7 +60,7 @@ This repository contains a Docker Compose setup for a complete media server envi
 - **Volumes**:
   - `/docker_config/sonarr:/config`: Configuration files.
   - `/pool0/Heh/Series:/tv`: TV series library.
-  - `/pool0/Heh/Torrents_ser:/downloads`: Download location for TV torrents.
+  - `/pool0/Heh/Torrents:/downloads`: Download location for TV torrents.
 
 ### 6. Overseerr
 - **Image**: lscr.io/linuxserver/overseerr:latest

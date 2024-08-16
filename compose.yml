@@ -109,7 +109,6 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
-      - CONTEXT_PATH=url-base #optional
     volumes:
       - /docker_config/booksonic_air:/config
       - /pool0/Heh/audiobooks:/audiobooks

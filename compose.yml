@@ -117,3 +117,17 @@ services:
     ports:
       - 4040:4040
     restart: unless-stopped
+  readarr-audiobooks:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /docker_config/readarr_audiobooks:/config
+      - /pool0/Heh/audiobooks:/audiobooks
+      - /pool0/Heh/Torrents:/downloads #optional
+    ports:
+      - 8787:8787
+    restart: unless-stopped

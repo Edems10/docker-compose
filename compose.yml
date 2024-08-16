@@ -102,3 +102,19 @@ services:
     ports:
       - 9117:9117
     restart: unless-stopped
+  booksonic-air:
+    image: lscr.io/linuxserver/booksonic-air:latest
+    container_name: booksonic-air
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - CONTEXT_PATH=url-base #optional
+    volumes:
+      - /docker_config/booksonic_air:/config
+      - /pool0/Heh/audiobooks:/audiobooks
+      - /pool0/Heh/podcasts:/podcasts
+      - /pool0/Heh/othermedia:/othermedia
+    ports:
+      - 4040:4040
+    restart: unless-stopped

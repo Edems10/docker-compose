@@ -48,12 +48,11 @@ The services are grouped by function to keep the system modular and secure.
 *   **Plex**: The streaming server. It is configured to use your **NVIDIA GPU** to transcode video streams, offloading the work from your CPU. It streams media from `/data/media`.
 
 ### The "Arr" Automation Stack
-These services manage your libraries, track new releases, and instruct qBittorrent to download them.
 *   **Radarr**: Movies manager.
 *   **Sonarr**: TV Series manager.
 *   **Readarr**: Audiobooks manager.
 *   **Prowlarr**: Indexer manager. It connects to torrent sites and syncs them to Radarr/Sonarr.
-*   **Overseerr**: A beautiful request frontend. Allows users to request movies/TV shows without accessing the backend apps.
+*   **Overseerr**: Allows users to request movies/TV shows without accessing the backend apps.
 
 ***
 
@@ -143,3 +142,12 @@ Once running, access your services at your server's IP (e.g., `192.168.1.50`):
 | **Overseerr** | 5055 | `http://IP:5055` |
 | **Sonarr** | 8989 | `http://IP:8989` |
 | **Radarr** | 7878 | `http://IP:7878` |
+
+### Legal Disclaimer & Usage Note
+>
+> This project is intended for managing **personally owned media libraries** (backups of physical discs you own) and for sharing **open-source software** (such as Linux ISOs) via the BitTorrent protocol.
+>
+> *   **Personal Backups:** The media management tools ("Arr" stack) are designed to organize valid personal backups of content you have legally purchased.
+> *   **Linux ISOs:** The torrent client is optimized for seeding and downloading large open-source distributions (e.g., Ubuntu, Debian, Arch) which rely on peer-to-peer sharing for bandwidth efficiency.
+> *   **Respect Copyright:** The authors of this repository do not condone or support the downloading or distribution of copyrighted material without permission. Users are responsible for ensuring their usage complies with all applicable local laws and regulations.
+

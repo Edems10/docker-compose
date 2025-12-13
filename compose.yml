@@ -1,50 +1,95 @@
-version: "3"
 services:
+  # VPN Service (Gluetun)
+  # Replaces NordLynx with Gluetun for better port forwarding support
   vpn:
-    image: ghcr.io/bubuntux/nordlynx
+    image: qmcgaw/gluetun
+    container_name: gluetun
     cap_add:
       - NET_ADMIN
-      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
     environment:
-      - TOKEN=???
-      - PRIVATE_KEY=???
-      - CONNECT=Czech_Republic
-      - NETWORK=192.168.1.0/24
+      # --- VPN Provider Configuration ---
+      - VPN_SERVICE_PROVIDER=private internet access  # Change to your provider (e.g., nordvpn, protonvpn)
+      - OPENVPN_USER=YOUR_VPN_USERNAME                # CHANGE THIS
+      - OPENVPN_PASSWORD=YOUR_VPN_PASSWORD            # CHANGE THIS
+      - SERVER_HOSTNAMES=de-frankfurt.privacy.network # Change to your preferred region
+      
+      # --- Port Forwarding (PIA/Proton specific) ---
+      - VPN_PORT_FORWARDING=on                        # Required for high-speed seeding
+      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/forwarded_port
+      
+      # --- Network & System ---
+      - TZ=Europe/Prague                              # Set your timezone
+      - HEALTH_VPN_DURATION_INITIAL=30s               # Give VPN time to connect before marking healthy
+    volumes:
+      - /docker_config/gluetun:/gluetun
     ports:
-      - 8080:8080
+      - 8080:8080                                     # Map qBittorrent WebUI port here (since it uses VPN network)
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=1
+    restart: unless-stopped
 
+  # Torrent Client
+  # Routes ALL traffic through the 'vpn' container
   torrent:
     image: ghcr.io/linuxserver/qbittorrent
-    network_mode: service:vpn
+    container_name: qbittorrent
+    network_mode: service:vpn                         # CRITICAL: This routes traffic through VPN
     environment:
-      - PUID=1000     
+      - PUID=1000
       - PGID=1000
+      - WEBUI_PORT=8080
     volumes:
       - /docker_config/qbittorrent:/config
-      - /pool0/Heh/Torrents:/downloads #optional
+      - /pool0/Heh/Torrents:/downloads
     depends_on:
-      - vpn
+      vpn:
+        condition: service_healthy                    # Only start if VPN is fully connected
+    restart: unless-stopped
 
+  # Port Forwarding Automation
+  # Automatically updates qBittorrent when VPN port changes
+  port-updater:
+    image: snoringdragon/gluetun-qbittorrent-port-manager:latest
+    container_name: torrent-port-updater
+    network_mode: service:vpn                         # Must be in the same network stack
+    environment:
+      - QBITTORRENT_HOST=localhost
+      - QBITTORRENT_PORT=8080
+      - QBITTORRENT_USER=admin                        # Default user (CHANGE if you set a custom WebUI login)
+      - QBITTORRENT_PASS=adminadmin                   # Default pass (CHANGE if you set a custom WebUI login)
+      - GLUETUN_CONTROL_PORT=8000
+      - INTERVAL=60
+    depends_on:
+      torrent:
+        condition: service_started
+      vpn:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Media Server (Plex)
+  # Configured for NVIDIA Hardware Transcoding
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
-    network_mode: host
+    network_mode: host                                # Host networking is recommended for Plex discovery
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
       - VERSION=docker
-      - PLEX_CLAIM=??? #optional
+      - PLEX_CLAIM=YOUR_CLAIM_TOKEN                   # Optional: Get from https://plex.tv/claim
       - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     volumes:
       - /docker_config/plex:/config
       - /pool0/Heh/Series:/tv
       - /pool0/Heh/Movies:/movies
-    runtime: nvidia
+    runtime: nvidia                                   # Requires NVIDIA Container Toolkit installed on host
     restart: unless-stopped
 
+  # Movie Management
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
@@ -55,11 +100,12 @@ services:
     volumes:
       - /docker_config/radarr:/config
       - /pool0/Heh/Movies:/movies
-      - /pool0/Heh/Torrents:/downloads #optional
+      - /pool0/Heh/Torrents:/downloads
     ports:
       - 7878:7878
     restart: unless-stopped
 
+  # TV Show Management
   sonarr:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
@@ -70,11 +116,12 @@ services:
     volumes:
       - /docker_config/sonarr:/config
       - /pool0/Heh/Series:/tv
-      - /pool0/Heh/Torrents:/downloads #optional
+      - /pool0/Heh/Torrents:/downloads
     ports:
       - 8989:8989
     restart: unless-stopped
 
+  # Request Management
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest
     container_name: overseerr
@@ -88,6 +135,7 @@ services:
       - 5055:5055
     restart: unless-stopped
 
+  # Indexer Manager
   jackett:
     image: lscr.io/linuxserver/jackett:latest
     container_name: jackett
@@ -95,13 +143,15 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
-      - AUTO_UPDATE=true #optional
+      - AUTO_UPDATE=true
     volumes:
       - /docker_config/jackett:/config
       - /pool0/Heh/blackhole:/downloads
     ports:
       - 9117:9117
     restart: unless-stopped
+
+  # Audiobook Management
   readarr-audiobooks:
     image: lscr.io/linuxserver/readarr:develop
     container_name: readarr
@@ -112,7 +162,7 @@ services:
     volumes:
       - /docker_config/readarr_audiobooks:/config
       - /pool0/Heh/audiobooks:/audiobooks
-      - /pool0/Heh/Torrents:/downloads #optional
+      - /pool0/Heh/Torrents:/downloads
     ports:
       - 8787:8787
     restart: unless-stopped

@@ -167,7 +167,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ${DATA_ROOT:?no .env}:${DATA_ROOT:?no .env}
+      - ${DATA_ROOT:?no .env}:${DATA_ROOT:?no .env}:ro
       - ${CONFIG_ROOT:?no .env}/homepage:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:

@@ -9,6 +9,102 @@ Built for a small home server (8 GB RAM, 4 cores, GTX 1060). Scales up fine — 
 
 ---
 
+## How it fits together
+
+```mermaid
+flowchart TB
+    users(["Users"])
+    trackers(["Indexers / trackers"])
+
+    users -->|HTTPS| cfd["cloudflared<br>Cloudflare Tunnel"]
+    cfd --> overseerr
+    cfd --> abr
+    cfd --> plex
+    cfd --> abs
+    cfd --> immich
+    cfd --> homepage
+
+    subgraph request ["Request"]
+        overseerr["Overseerr<br>films &amp; TV"]
+        abr["audiobookrequest"]
+    end
+
+    subgraph manage ["Find &amp; organise"]
+        radarr["Radarr"]
+        sonarr["Sonarr"]
+        prowlarr["Prowlarr"]
+        flaresolverr["FlareSolverr"]
+    end
+
+    subgraph vpnns ["gluetun · VPN kill-switch"]
+        qbit["qBittorrent"]
+        portupd["port-updater"]
+        mam["mam-ip-updater"]
+    end
+
+    subgraph serve ["Serve"]
+        plex["Plex"]
+        abs["Audiobookshelf"]
+    end
+
+    subgraph photos ["Immich"]
+        immich["immich-server"]
+        iml["machine-learning"]
+        idb[("postgres")]
+        redis[("valkey")]
+    end
+
+    subgraph ops ["Ops"]
+        homepage["Homepage"]
+        portainer["Portainer"]
+        scrutiny["Scrutiny"]
+    end
+
+    gpu{{"NVIDIA GPU"}}
+    data[("DATA_ROOT<br>media + downloads")]
+
+    overseerr --> radarr
+    overseerr --> sonarr
+    abr --> prowlarr
+    radarr --> prowlarr
+    sonarr --> prowlarr
+    prowlarr --> flaresolverr
+    prowlarr --> trackers
+
+    radarr -->|"send download"| qbit
+    sonarr -->|"send download"| qbit
+    portupd -->|"sync forwarded port"| qbit
+
+    qbit --> data
+    radarr -->|"rename &amp; file"| data
+    sonarr -->|"rename &amp; file"| data
+    plex --> data
+    abs --> data
+    immich --> data
+
+    immich --> iml
+    immich --> idb
+    immich --> redis
+
+    plex --> gpu
+    iml --> gpu
+
+    scrutiny -.->|"SMART"| data
+
+    classDef vpnbox fill:#1f6f4a,stroke:#0d3d28,color:#fff
+    class qbit,portupd,mam vpnbox
+```
+
+**The important boundary is `gluetun`.** qBittorrent, the port-updater and the
+IP updater have no network stack of their own — they share the VPN container's.
+If the tunnel drops, they lose internet entirely rather than falling back to
+your real connection.
+
+Everything else reaches the internet normally. Note that Prowlarr talks to
+indexers directly, *not* through the VPN.
+
+---
+
 ## What's in it
 
 **Downloading** — everything here shares the VPN's network. If the tunnel drops, they lose internet.
